@@ -1,0 +1,28 @@
+{
+  "name": "@eq-inc/image-ghost",
+  "version": "1.0.0",
+  "homepage": "https://github.com/eq-inc/image-ghost",
+  "description": "image-ghost - a image resize tool for developer",
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eq-inc/image-ghost"
+    },
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha ./test"
+  },
+  "author": "Toyoaki Doi <doi@eq-inc.jp>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "gm": "^1.23.0",
+    "optimist": "^0.6.1"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "expect.js": "^0.3.1",
+    "mocha": "^3.2.0"
+  }
+}
