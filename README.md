@@ -14,7 +14,7 @@ you can run image-ghost with command.
 
 ## Run as a single
 ```js
-node bin/resize.js -w 290 ./test/imgs/dummy.png ./test/imgs/export/imge.png
+node ./node_modules/\@eq-inc/image-ghost/bin/resize.js -w 290 ./test/imgs/dummy.png ./test/imgs/export/imge.png
 ```
 
 ### Available Options
@@ -32,7 +32,7 @@ node bin/resize.js -w 290 ./test/imgs/dummy.png ./test/imgs/export/imge.png
 
 ## Rus as a mutiple
 ```js
-node bin/image-ghost.js test/task/task.json
+node ./node_modules/\@eq-inc/image-ghost/bin/image-ghost.js test/task/task.json
 ```
 
 ### Sample of json
