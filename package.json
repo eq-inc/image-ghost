@@ -12,7 +12,9 @@
     },
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha ./test"
+    "test": "./node_modules/.bin/mocha ./test",
+    "resize": "node ./bin/resize.js",
+    "image-ghost": "node ./bin/image-ghost"
   },
   "author": "Toyoaki Doi <doi@eq-inc.jp>",
   "license": "Apache-2.0",
