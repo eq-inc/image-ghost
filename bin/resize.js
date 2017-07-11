@@ -1,9 +1,13 @@
+#!/usr/bin/env node
+
 'use strict';
 
 const fs = require('fs'),
     optmist = require('optimist'),
     imageGhost = require('../lib/index.js'),
     path = require('path');
+
+const meta = require('../package.json');
 
 const args = optmist
     .usage('Count the lines in a file.\nUsage: $0')
@@ -30,6 +34,7 @@ const args = optmist
     }).argv;
 
 if(args.version) {
+    console.log(meta.version);
     return false;
 } else if(args.help) {
     optmist.showHelp();
