@@ -1,6 +1,6 @@
 {
   "name": "@eq-inc/image-ghost",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "homepage": "https://github.com/eq-inc/image-ghost",
   "description": "image-ghost - a image resize tool for developer",
   "engines": {
@@ -13,7 +13,7 @@
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha ./test",
-    "resize": "node ./bin/resize.js",
+    "resize": "node ./bin/resize",
     "image-ghost": "node ./bin/image-ghost"
   },
   "author": "Toyoaki Doi <doi@eq-inc.jp>",

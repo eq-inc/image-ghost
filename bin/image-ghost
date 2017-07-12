@@ -1,1 +1,356 @@
-image-ghost.js
+#!/usr/bin/env node
+
+'use strict';
+
+const fs = require('fs'),
+    optmist = require('optimist'),
+    imageGhost = require('../lib/index.js'),
+    numCPUs = require('os').cpus().length,
+    cluster = require('cluster'),
+    path = require('path');
+
+const meta = require('../package.json');
+
+const args = optmist
+    .usage('Count the lines in a file.\nUsage: $0')
+    .options({
+        version: {
+            alias : 'v'
+        }
+    }).argv;
+
+const file = 'file',
+    directory = 'directory';
+
+if(args.version) {
+    console.log(meta.version);
+    return false;
+} else if(args.help) {
+    optmist.showHelp();
+    return false;
+}
+
+/**
+ * Process object data
+ *
+ * @param {Object} data
+ * @returns {Object}
+ */
+function checkJsonData(data) {
+    let srcStatus = null,
+        destStatus = null;
+
+    /**
+     * Check the received file
+     *
+     * @param {String} filename
+     * @returns {Array}
+     */
+    const extractDestName = function (filename) {
+        const regExp = /{{\s*(\w+?)\s*}}/g;
+        const matchData = [];
+        let match = null;
+
+        while (match = regExp.exec(filename)) {
+            matchData.push(match);
+        }
+
+        return matchData;
+    };
+
+    /**
+     * Create Regular filename
+     *
+     * @param {Object} makeDestNameData
+     * @returns {String}
+     */
+    const makeDestName = function (makeDestNameData) {
+        let _returnFileName = makeDestNameData.filename;
+
+        makeDestNameData.variableList.forEach(function (key, index) {
+            switch (makeDestNameData.variableList[index][1]) {
+                case 'basename':
+                    const _basename = path.basename(makeDestNameData.src, path.extname(makeDestNameData.src));
+
+                    _returnFileName = _returnFileName.replace(makeDestNameData.variableList[index][0], _basename);
+                    break;
+                case 'filename':
+                    const _filename = path.basename(makeDestNameData.src);
+
+                    _returnFileName = _returnFileName.replace(makeDestNameData.variableList[index][0], _filename);
+                    break;
+                case 'dirname':
+                    const dirname = makeDestNameData.dest;
+
+                    _returnFileName = _returnFileName.replace(makeDestNameData.variableList[index][0], dirname);
+                    break;
+                case 'extension':
+                    const extension = path.extname(path.resolve(makeDestNameData.src)).substring(1);
+
+                    _returnFileName = _returnFileName.replace(makeDestNameData.variableList[index][0], extension);
+                    break;
+                case 'percent':
+                case 'width':
+                case 'height':
+                    const targetProperty = makeDestNameData.variableList[index][1];
+
+                    _returnFileName = _returnFileName.replace(makeDestNameData.variableList[index][0],
+                        (makeDestNameData[targetProperty] || ''));
+
+                    break;
+            }
+        });
+
+        return _returnFileName;
+    };
+
+    try {
+        srcStatus = fs.statSync(path.resolve(data.src));
+    } catch(err) {
+        console.error(err.message);
+        process.exit(err.errno);
+    }
+
+    try {
+        destStatus = fs.statSync(path.resolve(data.dest));
+    } catch(err) {
+        if('ENOENT' !== err.code) {
+            console.error(err.message);
+            process.exit(err.errno);
+        }
+    }
+
+    data.srcPathType = srcStatus.isDirectory() ? directory : file;
+    data.isDestPathExists = (destStatus !== null);
+
+    if(data.isDestPathExists) {
+        data.destPathType = destStatus.isDirectory() ? directory : file;
+    }
+
+    // It is roughly divided into the following types
+    // at this stage, it create dest path
+    if(data.filename) {
+        // in This cause, There is filename property
+        data.variableList = extractDestName(data.filename);
+        data.src = path.resolve(data.src);
+        data.isDirname = data.variableList.some(function (value) {
+            return (-1 < value.indexOf('dirname'));
+        });
+
+        if(data.srcPathType === file) {
+            data.dest = path.resolve(data.dest, makeDestName(data));
+        } else if(data.srcPathType === directory) {
+            // At this point, the task what process has will became multiple.
+            data.nestTask = [];
+
+            fs.readdirSync(path.resolve(data.src)).reduce(function (collection, value) {
+                let srcStatus = null;
+
+                try {
+                    srcStatus = fs.statSync(path.resolve(data.src, value)).isFile() ? file: directory;
+                } catch(err) {
+                    if ('ENOENT' !== err.code) {
+                        console.error(err.message);
+                        process.exit(err.errno);
+                    }
+                }
+
+                if(srcStatus === file) {
+                    const makeDestNameData = Object.assign({}, data);
+                    let nestDestPath = null;
+
+                    if(data.isDirname) {
+                        nestDestPath = path.resolve(data.dest, makeDestName(Object.assign(makeDestNameData, {src: path.resolve(data.src, value)})));
+                    } else {
+                        nestDestPath = path.resolve(data.dest, makeDestName(Object.assign(makeDestNameData, {src: path.resolve(data.src, value)})));
+                    }
+
+                    collection.push({
+                        src: path.resolve(data.src, value),
+                        dest: nestDestPath
+                    });
+
+                    return collection;
+                }
+
+                return collection;
+            }, data.nestTask);
+
+            data.dest = path.resolve(data.dest);
+        }
+    } else {
+        // in This cause, There is not filename property
+        data.src = path.resolve(data.src);
+
+        if(data.srcPathType === directory) {
+            // At this point, the task what process has will became multiple.
+            data.nestTask = [];
+            data.dest = path.resolve(data.dest);
+
+            fs.readdirSync(fs.realpathSync(data.src)).reduce(function (collection, value) {
+                let srcStatus = null;
+
+                try {
+                    srcStatus = fs.statSync(path.resolve(data.src, value)).isFile() ? file: directory;
+                } catch(err) {
+                    if ('ENOENT' !== err.code) {
+                        console.error(err.message);
+                        process.exit(err.errno);
+                    }
+                }
+
+                if((srcStatus === file)) {
+                    collection.push({
+                        src: path.resolve(data.src, value),
+                        dest: path.resolve(data.dest, value)
+                    });
+                    return collection;
+                }
+
+                return collection;
+
+            }, data.nestTask);
+        } else {
+            data.dest = path.resolve(data.dest);
+        }
+    }
+
+    return data;
+}
+
+/**
+ * Create Target directory
+ *
+ * @param pathName
+ */
+function createDirectorySync(pathName) {
+    const info = path.parse(pathName),
+        directory = info.dir.substring(info.root.length),
+        list = directory.split(path.sep);
+
+    list.push(path.basename(pathName));
+
+    (function mkdir(current, list) {
+        const currentPath = path.resolve(current, list.shift());
+
+        try {
+            fs.statSync(currentPath);
+        } catch (err) {
+            if ('ENOENT' === err.code) {
+                fs.mkdirSync(currentPath);
+            } else {
+                console.error(err.message);
+                process.exit(err.errno);
+            }
+        } finally {
+            if (list.length) {
+                mkdir(currentPath, list);
+            }
+        }
+    })(info.root, list);
+}
+
+/**
+ * Flatten the array then give them to imageGhost as array
+ *
+ * @param {Array} data
+ * @returns {Array}
+ */
+function calculateTask(data) {
+    return data.reduce(function (collection, data) {
+        const _object = {
+            srcPathType: data.srcPathType,
+            filename: data.filename,
+            isDirname: data.isDirname || null,
+            option: createOptionParameter(data)
+        };
+
+        if(data.nestTask) {
+            Array.prototype.push.apply(collection, data.nestTask.reduce(function (nestCollection, nestValue) {
+                const objectAssign = Object.assign(Object.assign({}, _object), {
+                    src: nestValue.src,
+                    dest: nestValue.dest
+                });
+
+                nestCollection.push(objectAssign);
+
+                return nestCollection;
+            }, []));
+
+            return collection;
+        }
+
+        Array.prototype.push.apply(collection, [Object.assign(_object, {
+            src: data.src,
+            dest: data.dest
+        })]);
+
+        return collection;
+    }, []);
+}
+
+/**
+ * Sort options
+ *
+ * @param data
+ * @returns {*}
+ */
+function createOptionParameter(data) {
+    const properties = ['width', 'height', 'percent', 'format'];
+    return Object.keys(data).reduce(function (collection, key) {
+        const property = key.toLowerCase();
+        if (-1 < properties.indexOf(property)) {
+            collection[property] = data[key];
+        }
+
+        return collection;
+    }, {});
+}
+
+if (cluster.isMaster) {
+    const jsonData = require(fs.realpathSync(args._[0]));
+
+    const actionTask = calculateTask(jsonData.reduce(function (collection, data) {
+        collection.push(checkJsonData(data));
+        return collection;
+    }, []));
+
+    const processes = (numCPUs < actionTask.length) ? numCPUs : actionTask.length;
+
+    for (let i = 0; i < processes; ++i) {
+        cluster.fork({
+            data: JSON.stringify(actionTask.shift())
+        });
+    }
+
+    cluster.on('exit', function () {
+        if (actionTask.length) {
+            cluster.fork({
+                data: JSON.stringify(actionTask.shift())
+            });
+        }
+    });
+} else {
+    const _data = JSON.parse(process.env.data);
+
+    createDirectorySync(path.dirname(_data.dest));
+
+    imageGhost.resize(_data.src, _data.option, function (err, buffer) {
+        if (err) {
+            console.error(err, _data.src);
+            process.exit(102);
+        }
+
+        try {
+            fs.writeFileSync(_data.dest, buffer);
+        } catch(err) {
+            if (err) {
+                console.error('There is a problem with the writePath. Conflicting File of Directory should be already or Nothing Directory');
+                process.exit(103);
+            }
+        }
+
+        process.exit();
+    });
+}
+
