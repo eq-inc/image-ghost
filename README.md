@@ -3,40 +3,37 @@
 image-ghost is a tool that you can easily resize images. It has compatibility to jpeg, png, etc.
 image-ghost can be executed from command or api. Also, if you have a json, you can resize multiple image in bulk.
 
-## Installing
-Installation via npm
+## CLI
+### Install
 
-    npm i @eq-inc/image-ghost
-
-## Basic Usage
-### How to use as a command
-you can run image-ghost with command.
-
-## Run as a single
+    yarn global add @eq-inc/image-ghost
+    
+### Usage
+#### Resize image
 ```js
-node ./node_modules/\@eq-inc/image-ghost/bin/resize.js -w 290 ./readPath/imgs/dummy.png ./exportPath/image.png
+imageghost-resize -w 290 ./readPath/imgs/dummy.png ./exportPath/image.png
 ```
 
-### Available Options
-`-w` or `--width` Width for render image
+#### Available Options
+`-w` or `--width` Width for render image.
 
-`-h` or `--height` Height for render image
+`-h` or `--height` Height for render image.
 
-`-p` or `--percent` Rendering at the referenced ratio
+`-p` or `--percent` Rendering at the referenced ratio.
 
 `-f` or `--format` Format for render image. png or jpeg can be specified.
 
-`-v` or `--version` Show version
+`-v` or `--version` Show version.
 
-`-h` or `--help` Show help
+`-h` or `--help` Show help.
 
-## Rus as a mutiple
+#### Batch resize
 ```js
-node ./node_modules/\@eq-inc/image-ghost/bin/image-ghost readPath/task.json
+imageghost-task ./readPath/task.json
 ```
 
-### Sample of json
-if you want to run as multiple, you need like the following.
+#### Sample of json
+if you want to run as multiple, you need to have json like the following.
 
 ```javascript
 [
@@ -67,7 +64,7 @@ if you want to run as multiple, you need like the following.
  ]
 ```
 
-### Available Variables
+#### Available Variables
 `{{dirname}}` Directory path before resizing. it means target dest property full path.
 
 `{{filename}}` Image name including extension before resizing.
@@ -82,7 +79,27 @@ if you want to run as multiple, you need like the following.
 
 `{{percent}}` Percent. if there is no designation, It is converted to empty string.
 
-## How to use as a API
+## API
+### Install
+    yarn add image-ghost
+
+#### Usage
+```javascript
+image_ghost.resize(path[, option][, callback])
+```
+
+`path` \<string> | \<Buffer> Filepath or File Buffer.
+
+`option` \<Object>
+* width \<Number> Width for render image.
+* height \<Number> Height for render image.
+* percent \<Number> Rendering at the referenced ratio.
+
+you can specify width/height or percent.
+
+`callback` \<Function> you can give callback function promise or not promise. if you do running function, image buffer will be returned.
+
+#### Example
 ```js
 const fs = require('fs'),
     image_ghost = require('@eq-inc/image-ghost'),

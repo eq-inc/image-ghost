@@ -1,6 +1,6 @@
 {
   "name": "@eq-inc/image-ghost",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "homepage": "https://github.com/eq-inc/image-ghost",
   "description": "image-ghost - a image resize tool for developer",
   "engines": {
@@ -9,7 +9,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/eq-inc/image-ghost"
-    },
+  },
   "main": "index.js",
   "scripts": {
     "test": "./node_modules/.bin/mocha ./test",
@@ -26,5 +26,9 @@
     "chai": "^3.5.0",
     "expect.js": "^0.3.1",
     "mocha": "^3.2.0"
+  },
+  "bin": {
+    "imageghost-task": "./bin/image-ghost",
+    "imageghost-resize": "./bin/resize"
   }
 }
