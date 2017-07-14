@@ -3,6 +3,13 @@
 image-ghost is a tool that you can easily resize images. It has compatibility to jpeg, png, etc.
 image-ghost can be executed from command or api. Also, if you have a json, you can resize multiple image in bulk.
 
+## Getting started
+First download and install [GraphicsMagick](http://www.graphicsmagick.org/). In Mac OS X, you can simply use [Homebrew](http://mxcl.github.io/homebrew/) and do:
+
+```js
+brew install graphicsmagick
+```
+
 ## CLI
 ### Install
 

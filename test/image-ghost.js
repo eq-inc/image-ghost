@@ -122,7 +122,7 @@ describe('api', function () {
                 height: 50,
                 percent: 50
             }).catch(function (err) {
-                expect(err.message).to.be('Property error because data should has width or percent');
+                expect(err.message).to.be('width/height or percent is required');
                 done();
             });
         });
@@ -136,14 +136,14 @@ describe('api', function () {
 
         it('Should below 1 is error width', function (done) {
             imageGhost.resize(srcPath, { width: 0.5 }).catch(function (err) {
-                expect(err.message).to.be('Property error because width or height is 1 more');
+                expect(err.message).to.be('width/height cannot be less than 1');
                 done();
             });
         });
 
         it('Should below 1 is error height', function (done) {
             imageGhost.resize(srcPath, { height: 0.5 }).catch(function (err) {
-                expect(err.message).to.be('Property error because width or height is 1 more');
+                expect(err.message).to.be('width/height cannot be less than 1');
                 done();
             });
         });

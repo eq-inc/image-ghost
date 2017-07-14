@@ -1,6 +1,6 @@
 {
   "name": "@eq-inc/image-ghost",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "homepage": "https://github.com/eq-inc/image-ghost",
   "description": "image-ghost - a image resize tool for developer",
   "engines": {
